@@ -1,0 +1,11 @@
+{
+  "name": "todo-netlify-fauna",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Usama Subhani <reachusama@protonmail.com>",
+  "license": "MIT",
+  "private": true,
+  "workspaces":[
+    "packages/*"
+  ]
+}
