@@ -11,8 +11,8 @@
   "dependencies": {
     "@theme-ui/presets": "^0.3.0",
     "gatsby": "^2.24.85",
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
     "theme-ui": "^0.3.1"
   }
 }
