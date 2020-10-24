@@ -9,8 +9,10 @@
     "clean": "gatsby clean "
   },
   "dependencies": {
+    "@apollo/client": "^3.2.5",
     "@theme-ui/presets": "^0.3.0",
     "gatsby": "^2.24.85",
+    "graphql": "^15.3.0",
     "netlify-identity-widget": "^1.9.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
