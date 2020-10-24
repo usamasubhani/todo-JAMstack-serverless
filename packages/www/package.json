@@ -13,6 +13,7 @@
     "@theme-ui/presets": "^0.3.0",
     "gatsby": "^2.24.85",
     "graphql": "^15.3.0",
+    "isomorphic-fetch": "^3.0.0",
     "netlify-identity-widget": "^1.9.1",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
