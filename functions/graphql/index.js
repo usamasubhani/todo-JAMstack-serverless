@@ -1,4 +1,10 @@
 const { ApolloServer, gql } = require('apollo-server-lambda')
+const faunadb = require("faundadb")
+require('dotenv').config()
+const q = faunadb.query
+
+var client = new faunadb.Client({ secret: process.env.FAUNADB_SECRET })
+
 
 const typeDefs = gql`
     type Query {
@@ -15,24 +21,54 @@ const typeDefs = gql`
     }
 `;
 
-const todos = {}
-let todoIndex = 0
+// const todos = {}
+// let todoIndex = 0
 const resolvers = {
     Query: {
-        todos: () => {
-            return Object.values(todos)
+        todos: async () => {
+            const results = await client.query(
+                q.Paginate(q.Match(q.Index("get_all_todos")))
+            )
+            return results.data.map(([ref, text, done]) => {
+                id: ref.id,
+                    text,
+                    done
+            })
         }
     },
     Mutation: {
-        addTodo: (_, { text }) => {
-            todoIndex++
-            const id = `key-${todoIndex}`
-            todos[id] = { id, text, done: false }
-            return todos[id]
+        addTodo: async (_, { text }) => {
+            const results = await client.query(
+                q.Create(q.Collection("todos"), {
+                    data: {
+                        text,
+                        done: false
+                    }
+                })
+            )
+            return {
+                ...results.data,
+                id: results.ref.id
+            }
+            // todoIndex++
+            // const id = `key-${todoIndex}`
+            // todos[id] = { id, text, done: false }
+            // return todos[id]
         },
         updateTodoDone: (_, { id }) => {
-            todos[id].done = true
-            return todos[id]
+            const results = await client.query(
+                q.Update(q.Ref(q.Collection("todos"), id) {
+                    data: {
+                        done: true
+                    }
+                })
+            )
+            return {
+                ...results.data,
+                id: results.ref.id
+            }
+            // todos[id].done = true
+            // return todos[id]
         }
     }
 }
