@@ -1,4 +1,3 @@
 const React = require("react")
-const wrapRootElement = require("./wrap-root-element")
-
+const wrapRootElement = require("./wrap-root-element.js")
 exports.wrapRootElement = wrapRootElement
