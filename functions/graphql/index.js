@@ -1,89 +1,96 @@
-const { ApolloServer, gql } = require('apollo-server-lambda')
-const faunadb = require("faundadb")
-require('dotenv').config()
-const q = faunadb.query
+const { ApolloServer, gql } = require("apollo-server-lambda");
+const faunadb = require("faunadb");
+const q = faunadb.query;
 
-var client = new faunadb.Client({ secret: process.env.FAUNADB_SECRET })
-
+var client = new faunadb.Client({ secret: process.env.FAUNA });
 
 const typeDefs = gql`
-    type Query {
-        todos: [Todo]!
-    }
-    type Todo {
-        id: ID!
-        text: String!
-        done: Boolean!
-    }
-    type Mutation {
-        addTodo(text: String): Todo
-        updateTodoDone(id: ID!): Todo
-    }
+  type Query {
+    todos: [Todo]!
+  }
+  type Todo {
+    id: ID!
+    text: String!
+    done: Boolean!
+  }
+  type Mutation {
+    addTodo(text: String!): Todo
+    updateTodoDone(id: ID!): Todo
+  }
 `;
 
-// const todos = {}
-// let todoIndex = 0
 const resolvers = {
-    Query: {
-        todos: async () => {
-            const results = await client.query(
-                q.Paginate(q.Match(q.Index("get_all_todos")))
-            )
-            return results.data.map(([ref, text, done]) => {
-                id: ref.id,
-                    text,
-                    done
-            })
-        }
-    },
-    Mutation: {
-        addTodo: async (_, { text }) => {
-            const results = await client.query(
-                q.Create(q.Collection("todos"), {
-                    data: {
-                        text,
-                        done: false
-                    }
-                })
-            )
-            return {
-                ...results.data,
-                id: results.ref.id
-            }
-            // todoIndex++
-            // const id = `key-${todoIndex}`
-            // todos[id] = { id, text, done: false }
-            // return todos[id]
-        },
-        updateTodoDone: async (_, { id }) => {
-            const results = await client.query(
-                q.Update(q.Ref(q.Collection("todos"), id) {
-                    data: {
-                        done: true
-                    }
-                })
-            )
-            return {
-                ...results.data,
-                id: results.ref.id
-            }
-            // todos[id].done = true
-            // return todos[id]
-        }
+  Query: {
+    todos: async (parent, args, { user }) => {
+      if (!user) {
+        return [];
+      } else {
+        const results = await client.query(
+          q.Paginate(q.Match(q.Index("todos_by_user"), user))
+        );
+        return results.data.map(([ref, text, done]) => ({
+          id: ref.id,
+          text,
+          done
+        }));
+      }
     }
-}
+  },
+  Mutation: {
+    addTodo: async (_, { text }, { user }) => {
+      if (!user) {
+        throw new Error("Login or Signup");
+      }
+      const results = await client.query(
+        q.Create(q.Collection("todos"), {
+          data: {
+            text,
+            done: false,
+            owner: user
+          }
+        })
+      );
+      return {
+        ...results.data,
+        id: results.ref.id
+      };
+    },
+    updateTodoDone: async (_, { id }, { user }) => {
+      if (!user) {
+        throw new Error("Login or Signup");
+      }
+      const results = await client.query(
+        q.Update(q.Ref(q.Collection("todos"), id), {
+          data: {
+            done: true
+          }
+        })
+      );
+      return {
+        ...results.data,
+        id: results.ref.id
+      };
+    }
+  }
+};
 
 const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-
-    playground: true,
-    introspection: true
+  typeDefs,
+  resolvers,
+  context: ({ context }) => {
+    if (context.clientContext.user) {
+      return { user: context.clientContext.user.sub };
+    } else {
+      return {};
+    }
+  },
+  playground: true,
+  introspection: true
 })
 
 exports.handler = server.createHandler({
-    cors: {
-        origin: "*",
-        credentials: true
-    }
+  cors: {
+    origin: "*",
+    credentials: true
+  }
 })
