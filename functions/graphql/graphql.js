@@ -42,7 +42,7 @@ const resolvers = {
         throw new Error("Login or Signup");
       }
       const results = await client.query(
-        q.Create(q.Collection("todos"), {
+        q.Create(q.Collection("user-todos"), {
           data: {
             text,
             done: false,
@@ -60,7 +60,7 @@ const resolvers = {
         throw new Error("Login or Signup");
       }
       const results = await client.query(
-        q.Update(q.Ref(q.Collection("todos"), id), {
+        q.Update(q.Ref(q.Collection("user-todos"), id), {
           data: {
             done: true
           }
